@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { T, EMOJI_SET } from "@/lib/constants";
-import { Sparkles, RotateCcw } from "lucide-react";
+import { T } from "@/lib/constants";
+import { NER_CULTURAL_MOTIFS } from "@/lib/nerCulture";
+import { Sparkles, RotateCcw, MapPin } from "lucide-react";
 
 function shuffle(arr) {
   const a = [...arr];
@@ -19,17 +20,19 @@ export default function MemoryMatch({ level = 1, onComplete }) {
   const [flipped, setFlipped] = useState([]);
   const [matched, setMatched] = useState([]);
   const [moves, setMoves] = useState(0);
+  const [lastMatchedMotif, setLastMatchedMotif] = useState(null);
 
   const initGame = () => {
-    const chosen = EMOJI_SET.slice(0, pairsCount);
-    const deck = shuffle([...chosen, ...chosen]).map((emoji, index) => ({
-      id: `${emoji}_${index}_${Math.random()}`,
-      emoji,
+    const chosen = NER_CULTURAL_MOTIFS.slice(0, pairsCount);
+    const deck = shuffle([...chosen, ...chosen]).map((motif, index) => ({
+      id: `${motif.id}_${index}_${Math.random()}`,
+      motif,
     }));
     setCards(deck);
     setFlipped([]);
     setMatched([]);
     setMoves(0);
+    setLastMatchedMotif(null);
   };
 
   useEffect(() => {
@@ -42,7 +45,9 @@ export default function MemoryMatch({ level = 1, onComplete }) {
       const [idxA, idxB] = flipped;
       setMoves((m) => m + 1);
 
-      if (cards[idxA]?.emoji === cards[idxB]?.emoji) {
+      if (cards[idxA]?.motif.id === cards[idxB]?.motif.id) {
+        const motif = cards[idxA].motif;
+        setLastMatchedMotif(motif);
         setMatched((prev) => [...prev, idxA, idxB]);
         setTimeout(() => setFlipped([]), 350);
       } else {
@@ -59,28 +64,28 @@ export default function MemoryMatch({ level = 1, onComplete }) {
       const score = Math.max(30, Math.min(100, 100 - penalty));
       const timer = setTimeout(() => {
         onComplete(score);
-      }, 700);
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, [matched, cards.length, moves, pairsCount, onComplete]);
 
   const gridCols =
-    pairsCount <= 3 ? "grid-cols-3" : pairsCount === 4 ? "grid-cols-4" : "grid-cols-4 sm:grid-cols-4";
+    pairsCount <= 3 ? "grid-cols-3" : pairsCount === 4 ? "grid-cols-4" : "grid-cols-3 sm:grid-cols-4";
 
   return (
     <div className="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-3xl border border-sage shadow-card">
-      <div className="flex items-center justify-between border-b border-sage/60 pb-4 mb-6">
+      <div className="flex items-center justify-between border-b border-sage/60 pb-4 mb-4">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-display text-2xl font-bold text-ink">
-              Memory Match
+              Memory Match · স্মৃতি খেল
             </h2>
             <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-pine/10 text-pine">
               Level {level}
             </span>
           </div>
           <p className="text-sm text-ink-soft mt-1">
-            Tap cards to turn them over and find identical pairs.
+            Match traditional North Eastern symbols, orchids, tea & wildlife.
           </p>
         </div>
         <button
@@ -92,7 +97,24 @@ export default function MemoryMatch({ level = 1, onComplete }) {
         </button>
       </div>
 
-      <div className="flex items-center justify-between text-sm font-semibold text-ink-soft mb-6 px-1">
+      {/* Cultural discovery banner upon match */}
+      {lastMatchedMotif && (
+        <div className="mb-4 p-3 rounded-2xl bg-sage-light border border-sage flex items-center justify-between text-xs animate-in fade-in-50 slide-in-from-top-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{lastMatchedMotif.emoji}</span>
+            <div>
+              <p className="font-bold text-ink">{lastMatchedMotif.name}</p>
+              <p className="text-ink-soft text-[11px]">{lastMatchedMotif.desc}</p>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1 font-semibold text-pine text-[11px] px-2 py-0.5 rounded-full bg-white">
+            <MapPin className="w-3 h-3" />
+            {lastMatchedMotif.region}
+          </span>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between text-sm font-semibold text-ink-soft mb-5 px-1">
         <span>Moves Made: <strong className="text-ink text-base">{moves}</strong></span>
         <span>
           Matched: <strong className="text-pine text-base">{matched.length / 2}</strong> / {pairsCount}
@@ -110,19 +132,22 @@ export default function MemoryMatch({ level = 1, onComplete }) {
               key={card.id}
               disabled={isFlipped || flipped.length === 2}
               onClick={() => setFlipped((prev) => [...prev, idx])}
-              className={`aspect-square rounded-2xl sm:rounded-3xl flex items-center justify-center text-3xl sm:text-4xl transition-all duration-300 transform select-none ${
+              className={`aspect-square rounded-2xl sm:rounded-3xl flex flex-col items-center justify-center transition-all duration-300 transform select-none ${
                 isMatched
-                  ? "bg-sage/50 border-2 border-pine text-opacity-100 scale-95 shadow-none"
+                  ? "bg-sage/40 border-2 border-pine scale-95 shadow-none"
                   : isFlipped
-                  ? "bg-ivory border-2 border-marigold text-opacity-100 shadow-gentle scale-100"
-                  : "bg-pine hover:bg-pine-light text-transparent active:scale-95 shadow-card"
+                  ? "bg-ivory border-2 border-marigold shadow-gentle scale-100"
+                  : "bg-pine hover:bg-pine-light active:scale-95 shadow-card"
               }`}
-              style={{ minHeight: "75px" }}
+              style={{ minHeight: "80px" }}
             >
               {isFlipped ? (
-                <span className="transition-transform duration-300 animate-in zoom-in-50">
-                  {card.emoji}
-                </span>
+                <div className="flex flex-col items-center animate-in zoom-in-50">
+                  <span className="text-3xl sm:text-4xl">{card.motif.emoji}</span>
+                  <span className="text-[10px] font-bold text-ink mt-1 truncate max-w-[80px]">
+                    {card.motif.name.split(" ")[0]}
+                  </span>
+                </div>
               ) : (
                 <Sparkles className="w-5 h-5 text-sage/40" />
               )}

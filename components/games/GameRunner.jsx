@@ -6,8 +6,9 @@ import MemoryMatch from "./MemoryMatch";
 import PatternPath from "./PatternPath";
 import DailyRoutine from "./DailyRoutine";
 import { T } from "@/lib/constants";
+import { getTranslation } from "@/lib/nerCulture";
 
-export default function GameRunner({ game, difficulty = {}, onExit, onComplete }) {
+export default function GameRunner({ game, difficulty = {}, onExit, onComplete, language = "en" }) {
   const level = difficulty[game] || 1;
 
   return (
@@ -19,11 +20,11 @@ export default function GameRunner({ game, difficulty = {}, onExit, onComplete }
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-sage text-sm font-semibold text-ink-soft hover:text-ink hover:bg-sage-light transition shadow-gentle"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Home</span>
+          <span>{getTranslation(language, "backToHome")}</span>
         </button>
 
         <div className="text-xs font-semibold text-ink-soft px-3 py-1 rounded-full bg-sage-light">
-          Difficulty: Level {level} of 3
+          {getTranslation(language, "level")} {level} of 3
         </div>
       </div>
 
@@ -44,6 +45,7 @@ export default function GameRunner({ game, difficulty = {}, onExit, onComplete }
         {game === "recall" && (
           <DailyRoutine
             level={level}
+            language={language}
             onComplete={(score) => onComplete("recall", score, level)}
           />
         )}

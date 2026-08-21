@@ -3,8 +3,9 @@
 import React from "react";
 import { Pill, Droplet, CalendarClock, Check, Clock } from "lucide-react";
 import { T } from "@/lib/constants";
+import { getTranslation } from "@/lib/nerCulture";
 
-export default function ReminderList({ reminders = [], onToggleReminder }) {
+export default function ReminderList({ reminders = [], onToggleReminder, language = "en" }) {
   const getIcon = (type) => {
     switch (type) {
       case "pill":
@@ -24,14 +25,14 @@ export default function ReminderList({ reminders = [], onToggleReminder }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="font-display text-2xl font-bold text-ink">
-            Daily Reminders
+            {getTranslation(language, "dailyReminders")}
           </h2>
           <p className="text-sm text-ink-soft">
-            Medication, hydration & gentle routine care
+            {getTranslation(language, "remindersSubtitle")}
           </p>
         </div>
         <div className="px-3.5 py-1 rounded-full bg-sage-light border border-sage text-xs font-semibold text-pine">
-          {completedCount} of {reminders.length} Done
+          {completedCount} of {reminders.length} {getTranslation(language, "completed")}
         </div>
       </div>
 
@@ -86,7 +87,7 @@ export default function ReminderList({ reminders = [], onToggleReminder }) {
                     : "bg-ivory border border-sage text-pine hover:bg-sage-light"
                 }`}
               >
-                {reminder.done ? "Completed" : "Tap to Done"}
+                {reminder.done ? getTranslation(language, "completed") : getTranslation(language, "tapToDone")}
               </div>
             </button>
           );

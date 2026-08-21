@@ -6,19 +6,21 @@ import PatientHome from "@/components/patient/PatientHome";
 import CaregiverDashboard from "@/components/caregiver/CaregiverDashboard";
 import GameRunner from "@/components/games/GameRunner";
 import ResultsScreen from "@/components/games/ResultsScreen";
+import OnboardingAssessment from "@/components/patient/OnboardingAssessment";
 import { loadAppState, saveAppState } from "@/lib/storage";
 import {
   computeTrend,
   calculateNextDifficulty,
   generateInterventionAlert,
+  evaluateOnboardingAssessment,
 } from "@/lib/cognitiveEngine";
 import { Brain } from "lucide-react";
-import { T } from "@/lib/constants";
+import { T, getDefaultState } from "@/lib/constants";
 
 export default function SmritiApp() {
-  const [state, setState] = useState(null);
+  const [state, setState] = useState(() => getDefaultState());
   const [role, setRole] = useState("patient"); // "patient" | "caregiver"
-  const [screen, setScreen] = useState("home"); // "home" | "play:memory" | "play:attention" | "play:recall" | "results"
+  const [screen, setScreen] = useState("home"); // "home" | "assessment" | "play:memory" | "play:attention" | "play:recall" | "results"
   const [lastResult, setLastResult] = useState(null);
   const stateRef = useRef(null);
 
@@ -104,27 +106,50 @@ export default function SmritiApp() {
     [updateState]
   );
 
-  // Loading state
-  if (!state) {
-    return (
-      <div className="min-h-screen bg-ivory flex flex-col items-center justify-center">
-        <div className="w-16 h-16 rounded-2xl bg-pine flex items-center justify-center text-marigold animate-bounce shadow-card">
-          <Brain className="w-8 h-8" />
-        </div>
-        <h2 className="font-display text-2xl font-bold text-ink mt-4">
-          Smriti · স্মৃতি
-        </h2>
-        <p className="text-sm text-ink-soft mt-1">
-          Loading cognitive care platform...
-        </p>
-      </div>
-    );
-  }
+  // Assessment complete handler
+  const handleAssessmentComplete = useCallback(
+    (scores) => {
+      const evaluation = evaluateOnboardingAssessment(scores);
+      updateState((prev) => ({
+        ...prev,
+        sessions: [...prev.sessions, ...evaluation.sessions],
+        difficulty: evaluation.difficulty,
+        profile: {
+          ...prev.profile,
+          ...evaluation.profile,
+        },
+      }));
+      setScreen("home");
+    },
+    [updateState]
+  );
+
+  // Language change handler
+  const handleLanguageChange = useCallback(
+    (langCode) => {
+      updateState((prev) => ({
+        ...prev,
+        patient: {
+          ...prev.patient,
+          language: langCode,
+        },
+      }));
+    },
+    [updateState]
+  );
+
+  const currentLanguage = state?.patient?.language || "en";
 
   return (
     <div className="min-h-screen bg-ivory text-ink flex flex-col selection:bg-marigold/30">
-      {/* Navigation TopBar */}
-      <TopBar role={role} setRole={setRole} setScreen={setScreen} />
+      {/* Navigation TopBar with Regional Language Switcher */}
+      <TopBar
+        role={role}
+        setRole={setRole}
+        setScreen={setScreen}
+        language={currentLanguage}
+        onLanguageChange={handleLanguageChange}
+      />
 
       {/* Main Content Viewport */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6">
@@ -134,8 +159,18 @@ export default function SmritiApp() {
             {screen === "home" && (
               <PatientHome
                 state={state}
+                language={currentLanguage}
                 onPlay={(gameKey) => setScreen(`play:${gameKey}`)}
                 onToggleReminder={handleToggleReminder}
+                onStartAssessment={() => setScreen("assessment")}
+              />
+            )}
+
+            {screen === "assessment" && (
+              <OnboardingAssessment
+                patientName={state?.patient?.name || "Ratna Devi"}
+                onComplete={handleAssessmentComplete}
+                onSkip={() => setScreen("home")}
               />
             )}
 
@@ -143,6 +178,7 @@ export default function SmritiApp() {
               <GameRunner
                 game={screen.split(":")[1]}
                 difficulty={state.difficulty}
+                language={currentLanguage}
                 onExit={() => setScreen("home")}
                 onComplete={handleGameComplete}
               />

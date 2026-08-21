@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { T, ROUTINE_ITEMS } from "@/lib/constants";
+import { T } from "@/lib/constants";
+import { getLocalizedRoutine } from "@/lib/nerCulture";
 import { Play, Check, RotateCcw, ListChecks } from "lucide-react";
 
 function shuffle(arr) {
@@ -13,21 +14,23 @@ function shuffle(arr) {
   return a;
 }
 
-export default function DailyRoutine({ level = 1, onComplete }) {
+export default function DailyRoutine({ level = 1, onComplete, language = "en" }) {
   const itemCount = level === 1 ? 4 : level === 2 ? 5 : 6;
   const [orderedItems, setOrderedItems] = useState([]);
   const [shuffledPool, setShuffledPool] = useState([]);
   const [chosenSequence, setChosenSequence] = useState([]);
   const [phase, setPhase] = useState("intro"); // intro | showing | input | done
 
+  const pool = getLocalizedRoutine(language);
+
   const startGame = () => {
-    const subset = ROUTINE_ITEMS.slice(0, itemCount);
+    const subset = pool.slice(0, itemCount);
     setOrderedItems(subset);
     setShuffledPool(shuffle(subset));
     setChosenSequence([]);
     setPhase("showing");
 
-    // Show ordered list for 3.5 seconds
+    // Show ordered list for 3.6 seconds
     setTimeout(() => {
       setPhase("input");
     }, 3600);
@@ -58,14 +61,14 @@ export default function DailyRoutine({ level = 1, onComplete }) {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="font-display text-2xl font-bold text-ink">
-              Daily Routine
+              Daily Routine · দৈনন্দিন সূচী
             </h2>
             <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-clay/20 text-clay">
               Level {level}
             </span>
           </div>
           <p className="text-sm text-ink-soft mt-1">
-            {phase === "intro" && "Remember the sequential order of daily activities."}
+            {phase === "intro" && "Remember the chronological order of traditional morning habits."}
             {phase === "showing" && "Look closely at the morning order before it hides..."}
             {phase === "input" && `Tap the steps in the chronological order (${chosenSequence.length} of ${itemCount})`}
             {phase === "done" && "Great effort! Checking your recall..."}
@@ -92,7 +95,7 @@ export default function DailyRoutine({ level = 1, onComplete }) {
               Routine & Temporal Recall
             </h3>
             <p className="text-sm text-ink-soft mt-2">
-              We will display a series of {itemCount} morning habits. Remember what comes first, next, and last!
+              We will display a series of {itemCount} traditional morning habits. Remember what comes first, next, and last!
             </p>
           </div>
           <button
