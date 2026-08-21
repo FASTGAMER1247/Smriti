@@ -1,0 +1,16 @@
+{
+  "name": "Smriti Cognitive Platform",
+  "short_name": "Smriti",
+  "description": "AI Cognitive Care & Memory Assistance for North East India",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FBF7EF",
+  "theme_color": "#1F4E45",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
